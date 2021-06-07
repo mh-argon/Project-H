@@ -1,0 +1,128 @@
+// channel id 1409540
+// api key TL7WO3393N280AQM
+
+int LED = D6;
+int photoSensor = A0;
+int connected;
+int disconnected;
+int beamThreshold;
+
+// for counting the amount of time spent working
+int timeSpent;
+int temporaryTime;
+bool takenBreak = false;
+int count = 0;
+
+void setup() 
+{
+    // prepares the overall program
+    pinMode(LED, OUTPUT);
+    // uses myhandler as well as prepares the use of the myHandler function
+    //Particle.subscribe("Presense", myHandler);
+    pinMode(photoSensor, INPUT);
+    
+    // notifies the user of the procedure to prepare and check the local environment
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    delay(500);
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    delay(500);
+    
+    
+    // set the beams to analog sensors
+    int currentBeam1 = analogRead(photoSensor);
+    delay(200);
+    int currentBeam2 = analogRead(photoSensor);
+    delay(1000);
+    
+    // notifies the use of the second set of measurements
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    delay(500);
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    
+    // sets it to the nect beam
+    int currentBeam3 = analogRead(photoSensor);
+    delay(200);
+    int currentBeam4 = analogRead(photoSensor);
+    delay(1000);
+    
+    // indicates that the stage is complete and now some small preperations needs to be made.
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    delay(500);
+    digitalWrite(LED, HIGH);
+    delay(500);
+    digitalWrite(LED, LOW);
+    
+    // starts preparing the connected na ddisconnected setup
+    connected = (currentBeam1 + currentBeam2) / 2;
+    disconnected = (currentBeam3 + currentBeam4) / 2;
+    beamThreshold = (connected + disconnected) / 2;
+    
+    // starting the working period the counting begins
+    timeSpent = 0;
+    temporaryTime = 0;
+}
+
+void loop() 
+{
+    if (analogRead(photoSensor) < beamThreshold)
+    {
+            count += 1;
+            
+            if (count == 10)
+            {
+                takenBreak = true;
+            }
+    }
+    else
+    {
+        timeSpent += 1;
+        temporaryTime += 1;
+        
+        // testing purposes
+        if (temporaryTime == 20 && takenBreak == false)
+        {
+            digitalWrite(LED, HIGH);
+            Particle.publish("Presense", String(1), PRIVATE);
+        }
+    }
+    // delays and sets the overall time
+    delay(1000);
+    
+    // this should be set to 2 minutes
+    if (takenBreak == true && count == 10)
+    {
+        digitalWrite(LED, LOW);
+        takenBreak = false;
+        count = 0;
+    }
+}
+
+// change this to showcase the need to move or leave the area
+//void myHandler(const char *event, const char *data)
+//{
+//    // if time spent is less than 5 minutes
+//    // for testing purposes this is set to 5
+//    if (takenBreak == false)
+//    {
+//        digitalWrite(LED, HIGH);
+//    }
+//    else if (takenBreak == true)
+//    {
+//        // just turns the LED off if it is on
+//        digitalWrite(LED, LOW);
+//    }
+//    else
+//    {
+        // nothing
+//    }
+//}
